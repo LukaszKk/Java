@@ -57,13 +57,19 @@ public class Panel extends JPanel
             newGraphics.setColor(lightBlueColor);
             newGraphics.drawLine(x-3, y, getWidth() - 7*padding, y);
 
-            for (int j = 0; j <= numberYY; j++)
+            if( i > 0 )
             {
-                int xx = 3 * padding;
-                int yy = getHeight()/4-padding;// - ((j * (getHeight() - 2 * padding)) / numberYY + 2 * padding);
+                int yRectHeight = (getHeight() - ((2 * (getHeight() - 4 * padding)) / numberY + 2 * padding)) - (getHeight() - ((3 * (getHeight() - 4 * padding)) / numberY + 2 * padding));
+                int yy;
+                int h = 0;
+                for( int j = 0; j < numberYY; j++ )
+                {
+                    h += (j+1)*yRectHeight/48;
+                    yy = y + h;
 
-                newGraphics.setColor(lightGrayColor);
-                newGraphics.drawLine(xx, yy, getWidth() - 7 * padding, yy);
+                    newGraphics.setColor(lightGrayColor);
+                    newGraphics.drawLine(x, yy, getWidth() - 7 * padding, yy);
+                }
             }
 
             newGraphics.setColor(Color.BLACK);
@@ -88,7 +94,22 @@ public class Panel extends JPanel
             if( (i % ((int) ((arrayX.length / 3.0)) + 1)) == 0 || i == arrayX.length-1 )
             {
                 newGraphics.setColor(lightBlueColor);
-                newGraphics.drawLine(x, getHeight() - 2*padding, x, 2*padding);
+                newGraphics.drawLine(x, getHeight() - 2*padding + 3, x, 2*padding);
+
+                if( i > 0 )
+                {
+                    int xRectWidth = (((arrayX.length-1) * (getWidth() - 10 * padding) / (arrayX.length - 1) + 3 * padding) - (3 * padding))/3;
+                    int xx;
+                    int h = 0;
+                    for( int j = 0; j < numberYY; j++ )
+                    {
+                        h += (j+1)*xRectWidth/48;
+                        xx = x - h;
+
+                        newGraphics.setColor(lightGrayColor);
+                        newGraphics.drawLine(xx, getHeight() - 2*padding, xx, 2*padding);
+                    }
+                }
 
                 newGraphics.setColor(Color.BLACK);
                 String xLabel = i + "";
@@ -150,7 +171,7 @@ public class Panel extends JPanel
             List<Point> graphPoints = new ArrayList<>();
             for( int i = 0; i < arrayY.length; i++ )
             {
-                int x = (int) (i * xScale + 5 * padding);
+                int x = (int) (i * xScale + 5.5 * padding);
                 int y = (int) ((max - arrayY[i]) * yScale + padding);
                 graphPoints.add(new Point(x, y));
             }
