@@ -2,11 +2,13 @@ package package1;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.Transferable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class Panel extends JPanel
+public class Panel extends JPanel implements ClipboardOwner
 {
     private final int padding = 25;
     private final float min = -1f;
@@ -194,13 +196,6 @@ public class Panel extends JPanel
         newGraphics.drawString(xRtLabel, getWidth()-4*padding, padding + metrics.getHeight() + 3);
     }
 
-    private static float[] floatConcat(float[] first, float[] second)
-    {
-        float[] both = Arrays.copyOf(first, first.length+second.length);
-        System.arraycopy(second, 0, both, first.length, second.length);
-        return both;
-    }
-
     int getPositionMult()
     {
         return positionMult;
@@ -209,5 +204,11 @@ public class Panel extends JPanel
     void setPositionMult( int positionMult )
     {
         this.positionMult = positionMult;
+    }
+
+    @Override
+    public void lostOwnership(Clipboard clip, Transferable trans )
+    {
+        System.out.println( "Lost Clipboard Ownership" );
     }
 }
