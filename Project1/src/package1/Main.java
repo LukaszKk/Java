@@ -88,6 +88,8 @@ public class Main extends JFrame
             {
                 try
                 {
+                    Thread.sleep( 10 );
+
                     Robot robot = new Robot();
                     Rectangle area = new Rectangle(panel.getLocationOnScreen().x, panel.getLocationOnScreen().y, panel.getWidth(), panel.getHeight());
                     BufferedImage i = robot.createScreenCapture(area);
@@ -99,6 +101,10 @@ public class Main extends JFrame
                 {
                     x.printStackTrace();
                     System.exit(1);
+                }
+                catch( InterruptedException e1 )
+                {
+                    e1.printStackTrace();
                 }
             });
             copyThread.start();
