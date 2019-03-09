@@ -40,6 +40,7 @@ public class Panel extends JPanel implements ClipboardOwner
 
         newGraphics.setColor(Color.WHITE);
         newGraphics.fillRect(3*padding, 2*padding, getWidth() - 10 * padding, getHeight() - 4 * padding);
+        //newGraphics.fillRect(getWidth()/10, 2*padding, 11*getWidth()/16, getHeight() - 4 * padding);
         newGraphics.setColor(Color.BLACK);
 
         //draw Y lines
@@ -159,13 +160,18 @@ public class Panel extends JPanel implements ClipboardOwner
             newGraphics.drawString(xLabel, (float) getWidth() - 5 - 5 * padding + xk*3*padding,
                                            getHeight() - heightPadding - k*(5*getHeight()/38/6) - n);
 
-            double xScale = ((double) getWidth() - 13 * padding) / (arrayY.length - 1);
+            //double xScale = ((double) getWidth() - 13 * padding) / (arrayY.length - 1);
+            double xScale = ((double) getWidth() - 10 * padding) / (arrayY.length - 1);
             double yScale = ((double) getHeight() - 3 * padding) / (max - min);
+            int xRectWidth = (((arrayX.length-1) * (getWidth() - 10 * padding) / (arrayX.length - 1) + 3 * padding) - (3 * padding))/3;
 
+            float multiple = 1;
             List<Point> graphPoints = new ArrayList<>();
             for( int i = 0; i < arrayY.length; i++ )
             {
-                int x = (int) (i * xScale + 5.5 * padding);
+                //int x = (int) (i * xScale + 5.5 * padding);
+                int x = (int) (i * xScale + 3*padding) + (int) (xRectWidth/2*multiple);
+                multiple -= (float) 1/105;
                 int y = (int) ((max - arrayY[i]) * yScale + padding);
                 graphPoints.add(new Point(x, y));
             }
