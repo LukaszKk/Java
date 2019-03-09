@@ -9,12 +9,13 @@ import javax.swing.*;
 
 public class Main extends JFrame
 {
-    private JButton upButton;
-    private JButton downButton;
-    private JButton closeButton;
+    private JMenuItem upButton;
+    private JMenuItem downButton;
+    private JMenuItem closeButton;
     private JPopupMenu jPopupMenu;
-    private JMenuItem jMenuItem;
+    private JMenuItem copyButton;
     private Panel panel;
+    private JMenuBar jMenuBar;
 
     private Main()
     {
@@ -25,15 +26,16 @@ public class Main extends JFrame
         this.setMinimumSize( new Dimension(450, 350) );
         this.setPreferredSize( new Dimension(800, 600) );
 
-        upButton = new JButton( "UP" );
-        downButton = new JButton( "DOWN" );
-        closeButton = new JButton( "CLOSE" );
+        jMenuBar = new JMenuBar();
+
+        upButton = new JMenuItem( "UP" );
+        downButton = new JMenuItem( "DOWN" );
+        closeButton = new JMenuItem( "CLOSE" );
 
         downButton.setEnabled( false );
 
         jPopupMenu = new JPopupMenu();
-        jMenuItem = new JMenuItem( "Copy" );
-        jPopupMenu.add( jMenuItem );
+        copyButton = new JMenuItem( "Copy" );
 
         upButton.addActionListener(e ->
         {
@@ -79,7 +81,7 @@ public class Main extends JFrame
             }
         });
 
-        jMenuItem.addActionListener(e ->
+        copyButton.addActionListener(e ->
         {
             jPopupMenu.setVisible(false);
             Thread copyThread = new Thread(() ->
@@ -102,13 +104,11 @@ public class Main extends JFrame
             copyThread.start();
         });
 
-        upButton.setBounds( 10, 4, 100, getHeight()/15 );
-        downButton.setBounds( 110, 4, 100, getHeight()/15 );
-        closeButton.setBounds( 220, 4, 100, getHeight()/15 );
-
-        this.add( upButton );
-        this.add( downButton );
-        this.add( closeButton );
+        jMenuBar.add( upButton );
+        jMenuBar.add( downButton );
+        jMenuBar.add( closeButton );
+        jPopupMenu.add(copyButton);
+        this.setJMenuBar(jMenuBar);
 
         this.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         this.getContentPane().add( panel );
