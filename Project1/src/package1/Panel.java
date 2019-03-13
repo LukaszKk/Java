@@ -68,7 +68,7 @@ public class Panel extends JPanel implements ClipboardOwner
             }
 
             newGraphics.setColor(Color.BLACK);
-            String yLabel = (int) (((int) ((min + (max - min) * i/numberY)*100))/100.0) + "";  //????
+            String yLabel = "10^" + (int) (((int) ((min + (max - min) * i/numberY)*100))/100.0) + "";  //????
             FontMetrics metrics = newGraphics.getFontMetrics();
             int labelWidth = metrics.stringWidth(yLabel);
             newGraphics.drawString(yLabel, x - labelWidth - 5, y + (metrics.getHeight()/2) - 3);
@@ -107,7 +107,7 @@ public class Panel extends JPanel implements ClipboardOwner
                 }
 
                 newGraphics.setColor(Color.BLACK);
-                String xLabel = Math.round(((int) (arrayX[i]*100))/100.0 - 0.1) + "";
+                String xLabel = "10^" + Math.round(((int) (arrayX[i]*100))/100.0 - 0.1) + "";
                 metrics = newGraphics.getFontMetrics();
                 labelWidth = metrics.stringWidth(xLabel);
                 newGraphics.drawString(xLabel, x - labelWidth / 2, y + metrics.getHeight() + 3);
