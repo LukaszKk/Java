@@ -2,16 +2,15 @@ package sample;
 
 import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 
 import java.io.*;
-import java.util.Arrays;
 
 public class Controller
 {
@@ -31,7 +30,7 @@ public class Controller
     private LineChart lineChart;
 
     @FXML
-    private CategoryAxis xAxis;
+    private NumberAxis xAxis;
 
     @FXML
     private NumberAxis yAxis;
@@ -43,6 +42,9 @@ public class Controller
     private MenuItem open;
 
     @FXML
+    private ScrollPane scrollPane;
+
+    @FXML
     void fileOpen(Event event)
     {
         if( !flagOneOpen )
@@ -51,6 +53,9 @@ public class Controller
             file.setDisable(true);
             if( Main.fileOpen() )
             {
+                lineChart.getData().clear();
+                generateData( 0 );
+
                 profile.setDisable(false);
                 profile.getItems().clear();
 
@@ -73,8 +78,11 @@ public class Controller
     {
         profile.setDisable( true );
 
-        lineChart.setVisible( false );
+        scrollPane.setPannable(true);
+        lineChart.prefWidthProperty().bind(borderPane.widthProperty().multiply(0.9));
+        lineChart.prefHeightProperty().bind(borderPane.heightProperty().multiply(1.5));
 
+        lineChart.setVisible( false );
         lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.Y_AXIS);
         yAxis.setAutoRanging( false );
         yAxis.setLowerBound( 100 );
@@ -99,25 +107,28 @@ public class Controller
     private void drawChart()
     {
         lineChart.getData().clear();
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
         for( int i = 0; i < dataValues.length; i++ )
         {
+            if( dataValues[i] == fourDoubles[3] )
+                continue;
+
             if( min > dataValues[i] && dataValues[i] != fourDoubles[3] )
                 min = dataValues[i];
 
             if( max < dataValues[i] )
                 max = dataValues[i];
 
-            //TODO
-            series.getData().add(new XYChart.Data<>(fourDoubles[0] + i*fourDoubles[2] + "", dataValues[i] == fourDoubles[3] ? 0 : dataValues[i]));
+            series.getData().add(new XYChart.Data<>(dataValues[i], fourDoubles[0] + i*fourDoubles[2]));
         }
 
-        yAxis.setLowerBound(max + 1000);
-        yAxis.setUpperBound(min - 1000);
-
-
+        yAxis.setUpperBound(fourDoubles[0]);
+        yAxis.setLowerBound(fourDoubles[1]);
+        xAxis.setAutoRanging(false);
+        xAxis.setLowerBound( min - min/10);
+        xAxis.setUpperBound( max + max/10);
 
         lineChart.getData().add(series);
     }

@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -103,7 +102,6 @@ class FileReaderer
             String line;
             Scanner scanner = null;
 
-            double value = fourDoubles[3];
             while( (line = inputStream.readLine()) != null )
             {
                 scanner = new Scanner( line );
@@ -111,11 +109,8 @@ class FileReaderer
 
                 if( scanner.hasNextDouble() )
                 {
-                    value = scanner.nextDouble();
-                    if( value == fourDoubles[0] )
-                    {
+                    if( scanner.nextDouble() == fourDoubles[0] )
                         break;
-                    }
                 }
 
                 scanner.close();
@@ -127,23 +122,6 @@ class FileReaderer
             //Save values
             int i;
             int valuesIndex = 0;
-            /*if( number == 0 )
-            {
-                values[0] = value;
-            }
-            else
-            {
-                for( i = 1; i < number; i++ )
-                {
-                    if( scanner != null )
-                        scanner.nextDouble();
-                }
-                values[0] = scanner != null ? scanner.nextDouble() : fourDoubles[3];
-                if( scanner != null )
-                {
-                    scanner.close();
-                }
-            }*/
 
             for( i = 1; i < number+1; i++ )
             {
