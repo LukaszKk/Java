@@ -19,6 +19,7 @@ public class Controller
     private static String[] profileNames;
     private MenuItem[] profileItems;
     private double[] dataValues;
+    private static boolean isLin;
 
     @FXML
     private BorderPane borderPane;
@@ -45,6 +46,12 @@ public class Controller
     private ScrollPane scrollPane;
 
     @FXML
+    private Menu show;
+
+    @FXML
+    private MenuItem format;
+
+    @FXML
     void fileOpen(Event event)
     {
         if( !flagOneOpen )
@@ -58,13 +65,27 @@ public class Controller
 
                 profile.setDisable(false);
                 profile.getItems().clear();
+                show.setDisable(false);
+                format.setText("Logaritmic");
+                isLin = true;
 
                 profileItems = new MenuItem[profileNames.length];
                 for( int i = 0; i < profileNames.length; i++ )
                 {
                     profileItems[i] = new MenuItem(profileNames[i]);
                     int finalI = i;
-                    profileItems[i].setOnAction(actionEvent -> generateData(finalI));
+
+                    profileItems[i].setOnAction(actionEvent ->
+                    {
+                        format.setDisable(false);
+                        isLin = true;
+
+                        if( haveNegative() )
+                                format.setDisable(true);
+
+                        generateData(finalI);
+                    });
+
                     profile.getItems().add(profileItems[i]);
                 }
             }
@@ -77,10 +98,11 @@ public class Controller
     void initialize()
     {
         profile.setDisable( true );
+        show.setDisable(true);
 
         scrollPane.setPannable(true);
         lineChart.prefWidthProperty().bind(borderPane.widthProperty().multiply(0.9));
-        lineChart.prefHeightProperty().bind(borderPane.heightProperty().multiply(1.5));
+        lineChart.prefHeightProperty().bind(borderPane.heightProperty().multiply(3));
 
         lineChart.setVisible( false );
         lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.Y_AXIS);
@@ -101,6 +123,7 @@ public class Controller
         FileReaderer fileReaderer = new FileReaderer();
         dataValues = fileReaderer.readData( number );
         lineChart.setVisible(true);
+        xAxis.setLabel(profileNames[number]);
         drawChart();
     }
 
@@ -121,15 +144,48 @@ public class Controller
             if( max < dataValues[i] )
                 max = dataValues[i];
 
-            series.getData().add(new XYChart.Data<>(dataValues[i], fourDoubles[0] + i*fourDoubles[2]));
+            if( isLin )
+                series.getData().add(new XYChart.Data<>(dataValues[i], fourDoubles[0] + i*fourDoubles[2]));
+            else
+                series.getData().add(new XYChart.Data<>(Math.log10(dataValues[i]), fourDoubles[0] + i*fourDoubles[2]));
         }
 
         yAxis.setUpperBound(fourDoubles[0]);
         yAxis.setLowerBound(fourDoubles[1]);
         xAxis.setAutoRanging(false);
-        xAxis.setLowerBound( min - min/10);
-        xAxis.setUpperBound( max + max/10);
+        if( isLin )
+        {
+            xAxis.setLowerBound(min);
+            xAxis.setUpperBound(max);
+        }
+        else
+        {
+            xAxis.setLowerBound(Math.log10(min));
+            xAxis.setUpperBound(Math.log10(max));
+        }
 
         lineChart.getData().add(series);
+
+        if( isLin )
+            format.setText("Logaritmic");
+        else
+            format.setText("Linear");
+
+        xAxis.setLabel( xAxis.getLabel().split(" ")[0] + (isLin ? " Linear" : " Logaritmic"));
+    }
+
+    @FXML
+    void changeFormat()
+    {
+        isLin = !isLin;
+        drawChart();
+    }
+
+    private boolean haveNegative()
+    {
+        for( double d : dataValues )
+            if( d <= 0 && d != fourDoubles[3] )
+                return true;
+        return false;
     }
 }

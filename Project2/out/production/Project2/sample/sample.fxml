@@ -18,6 +18,11 @@
                   <MenuItem fx:id="open" mnemonicParsing="false" onAction="#fileOpen" text="Open" />
                </items></Menu>
             <Menu fx:id="profile" mnemonicParsing="false" text="Profile" />
+            <Menu fx:id="show" mnemonicParsing="false" text="Show">
+              <items>
+                <MenuItem fx:id="format" mnemonicParsing="false" onAction="#changeFormat" text="Format" />
+              </items>
+            </Menu>
          </menus>
       </MenuBar>
    </top>
@@ -27,10 +32,10 @@
         <content>
            <LineChart fx:id="lineChart" animated="false" createSymbols="false" legendVisible="false" prefHeight="298.0" prefWidth="361.0" BorderPane.alignment="CENTER">
                <xAxis>
-                   <NumberAxis label="X label" side="BOTTOM" fx:id="xAxis" />
+                   <NumberAxis side="BOTTOM" fx:id="xAxis" />
                </xAxis>
                <yAxis>
-                   <NumberAxis fx:id="yAxis" label="Y label" side="LEFT" />
+                   <NumberAxis fx:id="yAxis" label="DEPTH" side="LEFT" />
                </yAxis>
            </LineChart>
         </content>
