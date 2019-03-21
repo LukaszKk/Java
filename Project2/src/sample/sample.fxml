@@ -18,7 +18,7 @@
                   <MenuItem fx:id="open" mnemonicParsing="false" onAction="#fileOpen" text="Open" />
                </items></Menu>
             <Menu fx:id="profile" mnemonicParsing="false" text="Profile" />
-            <Menu fx:id="show" mnemonicParsing="false" text="Show">
+            <Menu fx:id="display" mnemonicParsing="false" text="Display">
               <items>
                 <MenuItem fx:id="format" mnemonicParsing="false" onAction="#changeFormat" text="Format" />
               </items>
@@ -30,9 +30,9 @@
    <center>
       <ScrollPane fx:id="scrollPane" prefHeight="280.0" prefWidth="226.0" BorderPane.alignment="CENTER">
         <content>
-           <LineChart fx:id="lineChart" animated="false" createSymbols="false" legendVisible="false" prefHeight="298.0" prefWidth="361.0" BorderPane.alignment="CENTER">
+           <LineChart fx:id="lineChart" alternativeColumnFillVisible="true" animated="false" axisSortingPolicy="Y_AXIS" createSymbols="false" horizontalZeroLineVisible="false" legendVisible="false" nodeOrientation="LEFT_TO_RIGHT" prefHeight="298.0" prefWidth="361.0" verticalZeroLineVisible="false" BorderPane.alignment="CENTER">
                <xAxis>
-                   <NumberAxis side="BOTTOM" fx:id="xAxis" />
+                   <NumberAxis side="TOP" fx:id="xAxis" />
                </xAxis>
                <yAxis>
                    <NumberAxis fx:id="yAxis" label="DEPTH" side="LEFT" />

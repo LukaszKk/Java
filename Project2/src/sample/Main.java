@@ -11,11 +11,14 @@ import java.io.File;
 
 public class Main extends Application
 {
+    private static Stage pStage;
+
     @Override
     public void start(Stage primaryStage) throws Exception
     {
+        pStage = primaryStage;
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Project 2");
+        primaryStage.setTitle("Open File");
 
         primaryStage.setScene(new Scene(root, 800, 600));
         primaryStage.show();
@@ -29,6 +32,7 @@ public class Main extends Application
         File file = fileChooser.showOpenDialog(stage);
         if( file != null )
         {
+            pStage.setTitle(file.getName());
             Controller.readFile(file);
             return true;
         }

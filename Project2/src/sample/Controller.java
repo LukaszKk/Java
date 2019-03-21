@@ -4,7 +4,6 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
@@ -17,9 +16,8 @@ public class Controller
     private static boolean flagOneOpen = false;
     private static double[] fourDoubles;        //START, STOP, STEP, NULL
     private static String[] profileNames;
-    private MenuItem[] profileItems;
     private double[] dataValues;
-    private static boolean isLin;
+    private static boolean isLin = true;
 
     @FXML
     private BorderPane borderPane;
@@ -28,7 +26,7 @@ public class Controller
     private Menu profile;
 
     @FXML
-    private LineChart lineChart;
+    private LineChart<Number, Number> lineChart;
 
     @FXML
     private NumberAxis xAxis;
@@ -46,7 +44,7 @@ public class Controller
     private ScrollPane scrollPane;
 
     @FXML
-    private Menu show;
+    private Menu display;
 
     @FXML
     private MenuItem format;
@@ -65,11 +63,11 @@ public class Controller
 
                 profile.setDisable(false);
                 profile.getItems().clear();
-                show.setDisable(false);
+                display.setDisable(false);
                 format.setText("Logaritmic");
                 isLin = true;
 
-                profileItems = new MenuItem[profileNames.length];
+                MenuItem[] profileItems = new MenuItem[profileNames.length];
                 for( int i = 0; i < profileNames.length; i++ )
                 {
                     profileItems[i] = new MenuItem(profileNames[i]);
@@ -77,12 +75,6 @@ public class Controller
 
                     profileItems[i].setOnAction(actionEvent ->
                     {
-                        format.setDisable(false);
-                        isLin = true;
-
-                        if( haveNegative() )
-                                format.setDisable(true);
-
                         generateData(finalI);
                     });
 
@@ -98,15 +90,14 @@ public class Controller
     void initialize()
     {
         profile.setDisable( true );
-        show.setDisable(true);
+        display.setDisable( true );
 
-        scrollPane.setPannable(true);
+        scrollPane.setPannable( true );
         lineChart.prefWidthProperty().bind(borderPane.widthProperty().multiply(0.9));
         lineChart.prefHeightProperty().bind(borderPane.heightProperty().multiply(3));
 
         lineChart.setVisible( false );
-        lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.Y_AXIS);
-        yAxis.setAutoRanging( false );
+        lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.NONE);
         yAxis.setLowerBound( 100 );
         yAxis.setUpperBound( 0 );
     }
@@ -124,15 +115,42 @@ public class Controller
         dataValues = fileReaderer.readData( number );
         lineChart.setVisible(true);
         xAxis.setLabel(profileNames[number]);
+
+        isLin = true;
+
+        if( haveNegative() )
+            display.setDisable(true);
+        else
+            display.setDisable(false);
+
+
         drawChart();
     }
 
+    @SuppressWarnings("unchecked")
     private void drawChart()
     {
         lineChart.getData().clear();
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        LineChart.Series<Number, Number> series = new LineChart.Series<>();
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
+
+        double yAxisCount = (double) dataValues.length/16;
+        double xAxisCount = (double) dataValues.length/64;
+
+        yAxis.setAutoRanging(false);
+        yAxis.setUpperBound(-fourDoubles[0]);
+        yAxis.setLowerBound(-fourDoubles[1]);
+        yAxis.setTickUnit((fourDoubles[1]-fourDoubles[0])/yAxisCount);
+        yAxis.setMinorTickVisible(true);
+
+        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
+            @Override
+            public String toString(Number value) {
+                return String.format("%7.1f", -value.doubleValue());
+            }
+        });
+
         for( int i = 0; i < dataValues.length; i++ )
         {
             if( dataValues[i] == fourDoubles[3] )
@@ -145,26 +163,30 @@ public class Controller
                 max = dataValues[i];
 
             if( isLin )
-                series.getData().add(new XYChart.Data<>(dataValues[i], fourDoubles[0] + i*fourDoubles[2]));
+                series.getData().add( new LineChart.Data<>(dataValues[i], -(fourDoubles[0] + i*fourDoubles[2])) );
             else
-                series.getData().add(new XYChart.Data<>(Math.log10(dataValues[i]), fourDoubles[0] + i*fourDoubles[2]));
+                series.getData().add( new LineChart.Data<>(Math.log10(dataValues[i]), -(fourDoubles[0] + i*fourDoubles[2])) );
         }
 
-        yAxis.setUpperBound(fourDoubles[0]);
-        yAxis.setLowerBound(fourDoubles[1]);
+        lineChart.getData().addAll(series);
+
         xAxis.setAutoRanging(false);
         if( isLin )
         {
             xAxis.setLowerBound(min);
             xAxis.setUpperBound(max);
+            xAxis.setTickUnit((max-min)/xAxisCount);
         }
         else
         {
             xAxis.setLowerBound(Math.log10(min));
             xAxis.setUpperBound(Math.log10(max));
+            xAxis.setTickUnit((Math.log10(max)-Math.log10(min))/xAxisCount);
         }
+        xAxis.setMinorTickVisible(true);
 
-        lineChart.getData().add(series);
+        lineChart.setHorizontalGridLinesVisible(true);
+        lineChart.setVerticalGridLinesVisible(true);
 
         if( isLin )
             format.setText("Logaritmic");
@@ -184,8 +206,13 @@ public class Controller
     private boolean haveNegative()
     {
         for( double d : dataValues )
-            if( d <= 0 && d != fourDoubles[3] )
+        {
+            if( (d <= 0) && (d != fourDoubles[3]) )
+            {
                 return true;
+            }
+        }
+
         return false;
     }
 }
