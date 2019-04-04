@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #3562e8;" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.LoginController">
+   <children>
+      <Label fx:id="loginLabel" layoutX="159.0" layoutY="36.0" prefHeight="90.0" prefWidth="288.0" text=" Restaurant Manager">
+         <font>
+            <Font size="31.0" />
+         </font>
+      </Label>
+      <TextField fx:id="loginField" layoutX="222.0" layoutY="140.0" prefHeight="29.0" prefWidth="181.0" promptText=" User name">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </TextField>
+      <Button fx:id="signInButton" layoutX="265.0" layoutY="263.0" mnemonicParsing="false" onAction="#signInButtonAction" prefHeight="25.0" prefWidth="77.0" text="Sign in">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Button>
+      <PasswordField fx:id="passwordField" layoutX="222.0" layoutY="200.0" prefHeight="29.0" prefWidth="181.0" promptText=" Password">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </PasswordField>
+      <Hyperlink fx:id="exitButton" layoutX="533.0" layoutY="14.0" onAction="#exitAction" text="Exit" textFill="#141313" />
+   </children>
+</AnchorPane>
