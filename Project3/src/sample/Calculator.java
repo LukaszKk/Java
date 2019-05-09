@@ -1,9 +1,11 @@
 package sample;
 
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -18,37 +20,57 @@ class Calculator
     private final double E;
     private double B;
     private double[][] points;
-    private int pointsCnt;
+    //private int pointsCnt;
     private double[][] potential;
+    private Color[] colors;
+    private Canvas canvas;
+    private Polygon figure;
 
-    Calculator( Pane pane )
+    //=========================================================================================================//
+    Calculator( Pane pane, Canvas canvas )
     {
+        this.canvas = canvas;
         Label label = new Label("B: ");
-        label.setLayoutX( 160 );
-        label.setLayoutY( 13 );
+        label.setLayoutX(160);
+        label.setLayoutY(13);
         t = new TextField();
-        t.setMaxSize( 50, 20 );
-        t.setLayoutX( 175 );
-        t.setLayoutY( 10 );
+        t.setMaxSize(50, 20);
+        t.setLayoutX(175);
+        t.setLayoutY(10);
 
         pane.getChildren().addAll(label, t);
         E = 1E-8;
-        pointsCnt = 0;
+        //pointsCnt = 0;
         B = 1;
+
+        colors = new Color[]{ new Color(244 / 255d, 66 / 255d, 66 / 255d, 1),
+                new Color(244 / 255d, 98 / 255d, 65 / 255d, 1),
+                new Color(244 / 255d, 181 / 255d, 65 / 255d, 1),
+                new Color(199 / 255d, 244 / 255d, 65 / 255d, 1),
+                new Color(106 / 255d, 244 / 255d, 65 / 255d, 1),
+                new Color(65 / 255d, 244 / 255d, 193 / 255d, 1),
+                new Color(65 / 255d, 160 / 255d, 244 / 255d, 1),
+                new Color(65 / 255d, 73 / 255d, 244 / 255d, 1),
+                new Color(163 / 255d, 65 / 255d, 244 / 255d, 1),
+                new Color(244 / 255d, 65 / 255d, 217 / 255d, 1) };
     }
 
+    //=========================================================================================================//
     void setNodes( ArrayList<MutablePair<Integer, Integer>> nodes )
     {
         this.nodes = nodes;
     }
 
+    //=========================================================================================================//
     void calc()
     {
         ArrayList<MutablePair<Integer, Integer>> rNodes = getRectNodes(nodes);
-        System.out.println( nodes );
-        Polygon figure = new Polygon();
-        for( MutablePair<Integer, Integer> node : nodes )
+        System.out.println(nodes);
+        figure = new Polygon();
+        figure.getPoints().addAll((double) nodes.get(0).left, (double) nodes.get(0).right);
+        for( int i = 1; i < nodes.size(); i++ )
         {
+            MutablePair<Integer, Integer> node = nodes.get(i);
             figure.getPoints().addAll((double) node.left, (double) node.right);
         }
 
@@ -62,18 +84,19 @@ class Calculator
         }
         setEdge();
 
-        for( int i = rNodes.get(0).left; i <= rNodes.get(2).left; i++ )
+        /*for( int i = rNodes.get(0).left; i <= rNodes.get(2).left; i++ )
         {
             for( int j = rNodes.get(0).right; j <= rNodes.get(2).right; j++ )
             {
-                if( !figure.contains(i, j) )
+                if( !isEdge(j, i) && !figure.contains(i, j) )
                     continue;
 
                 pointsCnt++;
             }
-        }
+        }*/
 
-        t.setOnKeyPressed(keyEvent -> {
+        t.setOnKeyPressed(keyEvent ->
+        {
             if( keyEvent.getCode() == KeyCode.ENTER && Main.enter )
             {
                 String text = t.getText();
@@ -81,60 +104,72 @@ class Calculator
                 {
                     B = Integer.parseInt(text);
                     calcPotential(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
+                    createMap(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
                 }
             }
         });
 
-        /*for( int i = rNodes.get(0).left; i <= rNodes.get(2).left; i++ )
+        /*for( int i = rNodes.get(0).right; i <= rNodes.get(2).right; i++ )
         {
-            for( int j = rNodes.get(0).right; j <= rNodes.get(2).right; j++ )
-                //if( !figure.contains(i, j) )
-                //    System.out.print( " " );
-                //else
-                    System.out.print(points[i][j]);
+            for( int j = rNodes.get(0).left; j <= rNodes.get(2).left; j++ )
+            {
+                if( !isEdge(j, i) && !figure.contains(j, i) )
+                    System.out.print("0.0 ");
+                else
+                    System.out.print(points[j][i] + " ");
+            }
             System.out.println();
         }*/
     }
 
+    //=========================================================================================================//
     private void calcPotential( int left0, int leftN, int right0, int rightN )
     {
-        Boolean[][] condition = new Boolean[leftN-left0-1][rightN-right0-1];
-        for( int i = 0; i < leftN-left0-1; i++ )
-            for( int j = 0; j < rightN-right0-1; j++)
-                condition[i][j] = false;
+        Boolean[][] condition = new Boolean[leftN - left0 - 1][rightN - right0 - 1];
+        for( int i = 0; i < leftN - left0 - 1; i++ )
+            Arrays.fill( condition[i], false );
 
         int cnt = 0;
         while( true )
         {
-            for( int i = left0 + 1; i < leftN; i++ )
+            for( int i = right0 + 1; i < rightN; i++ )
             {
-                for( int j = right0 + 1; j < rightN; j++ )
+                for( int j = left0 + 1; j < leftN; j++ )
                 {
-                    points[i][j] = potential[i][j];
+                    if( !isEdge(j, i) && !figure.contains(j, i) )
+                        continue;
+
+                    points[j][i] = potential[j][i];
                 }
             }
 
-            for( int i = left0 + 1; i < leftN; i++ )
+            for( int i = right0 + 1; i < rightN; i++ )
             {
-                for( int j = right0 + 1; j < rightN; j++ )
+                for( int j = left0 + 1; j < leftN; j++ )
                 {
-                    potential[i][j] = (1 - B) * points[i][j] + B / 4 * (points[i + 1][j] + points[i - 1][j] + points[i][j + 1] + points[i][j - 1]);
-                    if( Math.abs(potential[i][j] - points[i][j]) < E )
-                        condition[i-left0-1][j-right0-1] = true;
-                    //System.out.print( potential[i][j] );
+                    if( !isEdge(j, i) && !figure.contains(j, i) )
+                        continue;
+
+                    potential[j][i] = ((1 - B) * points[j][i]) + (B * (points[j + 1][i] + points[j - 1][i] + points[j][i + 1] + points[j][i - 1]));
+                    if( /*!condition[j - left0 - 1][i - right0 - 1] &&*/ (Math.abs(potential[j][i] - points[j][i]) < E) )
+                        condition[j - left0 - 1][i - right0 - 1] = true;
+                    //System.out.print( points[j][i] + "," + potential[j][i] + "," + (condition[j - left0 - 1][i - right0 - 1] ? "t" : "F") + " "  );
                 }
                 //System.out.println();
             }
+            //System.out.println();
 
             cnt++;
             boolean is = true;
-            for( int i = 0; i < leftN-left0-1; i++ )
+            for( int i = 0; i < rightN - right0 - 1; i++ )
             {
-                for( int j = 0; j < rightN - right0 - 1; j++ )
+                for( int j = 0; j < leftN - left0 - 1; j++ )
                 {
-                    if( condition[i][j].equals(false) )
+                    if( !condition[j][i] )
                     {
                         is = false;
+                        for( int k = 0; k < leftN - left0 - 1; k++ )
+                            Arrays.fill( condition[k], false );
                         break;
                     }
                 }
@@ -145,8 +180,9 @@ class Calculator
             if( is )
                 break;
 
-            System.out.println( cnt );
-            /*for( int i = 0; i < leftN-left0-1; i++ )
+            //System.out.println( cnt );
+            /*
+            for( int i = 0; i < leftN-left0-1; i++ )
             {
                 for( int j = 0; j < rightN - right0 - 1; j++ )
                     System.out.print(condition[i][j] + ",");
@@ -156,9 +192,71 @@ class Calculator
             */
         }
 
-        t.setText( Integer.toString(cnt) );
+        t.setText(Integer.toString(cnt));
     }
 
+    //=========================================================================================================//
+    private void drawLegend( double min, double max )
+    {
+        canvas.getGraphicsContext2D().clearRect(0, 310, 20, 330);
+        canvas.getGraphicsContext2D().fillText(Double.toString(min), 0, 310);
+        canvas.getGraphicsContext2D().setFill(colors[9]);
+        canvas.getGraphicsContext2D().clearRect(0, 95, 20, 115);
+        canvas.getGraphicsContext2D().fillText(Double.toString(max), 0, 95);
+        for( int i = 0, j = 9; i < 10; ++i, --j )
+        {
+            canvas.getGraphicsContext2D().setFill(colors[j]);
+            canvas.getGraphicsContext2D().fillRect(0, 100 + i * 20, 20, 20);
+        }
+    }
+
+    //=========================================================================================================//
+    private void createMap( int left0, int leftN, int right0, int rightN )
+    {
+        double max = potential[left0 + 1][right0 + 1];
+        double min = potential[left0 + 1][right0 + 1];
+        for( int i = right0 + 1; i < rightN; i++ )
+        {
+            for( int j = left0 + 1; j < leftN; j++ )
+            {
+                if( !isEdge(j, i) && !figure.contains(j, i) )
+                    continue;
+
+                max = Math.max(potential[j][i], max);
+                min = Math.min(potential[j][i], min);
+            }
+        }
+
+        drawLegend(min, max);
+
+        for( int i = right0 + 1; i < rightN; i++ )
+        {
+            for( int j = left0 + 1; j < leftN; j++ )
+            {
+                if( !isEdge(j, i) && !figure.contains(j, i) )
+                    continue;
+
+                Color c = colors[getColor(potential[j][i], min, max)];
+                canvas.getGraphicsContext2D().setFill(c);
+                canvas.getGraphicsContext2D().fillRect(j, i, 1, 1);
+            }
+        }
+    }
+
+    //=========================================================================================================//
+    private int getColor( double val, double min, double max )
+    {
+        double one = (max - min) / 10;
+        for( int i = 0; i < 10; min += one, ++i )
+        {
+            if( val <= min )
+                return i;
+        }
+
+        return 9;
+    }
+
+    //=========================================================================================================//
     private ArrayList<MutablePair<Integer, Integer>> getRectNodes( ArrayList<MutablePair<Integer, Integer>> nodes )
     {
         ArrayList<MutablePair<Integer, Integer>> rNodes = new ArrayList<>();
@@ -173,77 +271,87 @@ class Calculator
                 minX = node.left;
             else if( node.left > maxX )
                 maxX = node.left;
+
             if( node.right < minY )
                 minY = node.right;
             else if( node.right > maxY )
                 maxY = node.right;
         }
-        rNodes.add( new MutablePair<>(minX, minY) );
-        rNodes.add( new MutablePair<>(maxX, minY) );
-        rNodes.add( new MutablePair<>(maxX, maxY) );
-        rNodes.add( new MutablePair<>(minX, maxY) );
+        rNodes.add(new MutablePair<>(minX, minY));
+        rNodes.add(new MutablePair<>(maxX, minY));
+        rNodes.add(new MutablePair<>(maxX, maxY));
+        rNodes.add(new MutablePair<>(minX, maxY));
 
         return rNodes;
     }
 
+    //=========================================================================================================//
     private boolean isEdge( int x, int y )
     {
         int i = 1;
+        if( x == nodes.get(0).left && y == nodes.get(0).right )
+            return true;
         for( ; i < nodes.size(); i++ )
         {
-            if( nodes.get(i).left.equals(nodes.get(i - 1).left) )
-                if( nodes.get(i).left.equals(x) )
+            if( x == nodes.get(i).left && y == nodes.get(i).right )
+                return true;
+            if( nodes.get(i).left.equals(nodes.get(i - 1).left) && nodes.get(i).left.equals(x) )
+            {
+                if( (nodes.get(i - 1).right < y && y < nodes.get(i).right) || (nodes.get(i).right < y && y < nodes.get(i - 1).right) )
                     return true;
-            else
-                if( nodes.get(i).right.equals(y) )
+            }
+            else if( nodes.get(i).right.equals(nodes.get(i - 1).right) && nodes.get(i).right.equals(y) )
+            {
+                if( (nodes.get(i - 1).left < x && x < nodes.get(i).left) || (nodes.get(i).left < x && x < nodes.get(i - 1).left) )
                     return true;
+            }
         }
-        if( nodes.get(i-1).left.equals(nodes.get(0).left) )
-            if( nodes.get(0).left.equals(x) )
-                return true;
-        else
-            if( nodes.get(0).right.equals(y) )
-                return true;
+        if( (nodes.get(i - 1).left.equals(nodes.get(0).left)) && nodes.get(i-1).left.equals(x) )
+        {
+            return (nodes.get(i - 1).right < y && y < nodes.get(0).right) || (nodes.get(0).right < y && y < nodes.get(i - 1).right);
+        }
+        else if( nodes.get(0).right.equals(nodes.get(i - 1).right) && nodes.get(0).right.equals(y) )
+        {
+            return (nodes.get(i - 1).left < x && x < nodes.get(0).left) || (nodes.get(0).left < x && x < nodes.get(i - 1).left);
+        }
 
         return false;
     }
 
+    //=========================================================================================================//
     private void setEdge()
     {
         int i = 1;
         Random rand = new Random();
         for( ; i < nodes.size(); i++ )
         {
-            int r = rand.nextInt(8)+1;
+            int r = rand.nextInt(8) + 1;
             if( nodes.get(i).left.equals(nodes.get(i - 1).left) )
             {
-                if( nodes.get(i).right < nodes.get(i-1).right )
+                if( nodes.get(i).right < nodes.get(i - 1).right )
                 {
-                    for( int j = nodes.get(i).right; j <= nodes.get(i-1).right; j++ )
+                    for( int j = nodes.get(i).right; j <= nodes.get(i - 1).right; j++ )
+                    {
+                        points[nodes.get(i).left][j] = r;
+                    }
+                } else
+                {
+                    for( int j = nodes.get(i - 1).right; j <= nodes.get(i).right; j++ )
                     {
                         points[nodes.get(i).left][j] = r;
                     }
                 }
-                else
-                {
-                    for( int j = nodes.get(i-1).right; j <= nodes.get(i).right; j++ )
-                    {
-                        points[nodes.get(i).left][j] = r;
-                    }
-                }
-            }
-            else
+            } else
             {
-                if( nodes.get(i).left < nodes.get(i-1).left )
+                if( nodes.get(i).left < nodes.get(i - 1).left )
                 {
-                    for( int j = nodes.get(i).left; j <= nodes.get(i-1).left; j++ )
+                    for( int j = nodes.get(i).left; j <= nodes.get(i - 1).left; j++ )
                     {
                         points[j][nodes.get(i).right] = r;
                     }
-                }
-                else
+                } else
                 {
-                    for( int j = nodes.get(i-1).left; j <= nodes.get(i).left; j++ )
+                    for( int j = nodes.get(i - 1).left; j <= nodes.get(i).left; j++ )
                     {
                         points[j][nodes.get(i).right] = r;
                     }
@@ -251,36 +359,33 @@ class Calculator
             }
         }
 
-        int r = rand.nextInt(8)+1;
+        int r = rand.nextInt(8) + 1;
         if( nodes.get(0).left.equals(nodes.get(i - 1).left) )
         {
-            if( nodes.get(i-1).right < nodes.get(0).right )
+            if( nodes.get(i - 1).right < nodes.get(0).right )
             {
-                for( int j = nodes.get(i-1).right; j <= nodes.get(0).right; j++ )
+                for( int j = nodes.get(i - 1).right; j <= nodes.get(0).right; j++ )
+                {
+                    points[nodes.get(0).left][j] = r;
+                }
+            } else
+            {
+                for( int j = nodes.get(0).right; j <= nodes.get(i - 1).right; j++ )
                 {
                     points[nodes.get(0).left][j] = r;
                 }
             }
-            else
-            {
-                for( int j = nodes.get(0).right; j <= nodes.get(i-1).right; j++ )
-                {
-                    points[nodes.get(0).left][j] = r;
-                }
-            }
-        }
-        else
+        } else
         {
-            if( nodes.get(0).left < nodes.get(i-1).left )
+            if( nodes.get(0).left < nodes.get(i - 1).left )
             {
-                for( int j = nodes.get(0).left; j <= nodes.get(i-1).left; j++ )
+                for( int j = nodes.get(0).left; j <= nodes.get(i - 1).left; j++ )
                 {
                     points[j][nodes.get(0).right] = r;
                 }
-            }
-            else
+            } else
             {
-                for( int j = nodes.get(i-1).left; j <= nodes.get(0).left; j++ )
+                for( int j = nodes.get(i - 1).left; j <= nodes.get(0).left; j++ )
                 {
                     points[j][nodes.get(0).right] = r;
                 }

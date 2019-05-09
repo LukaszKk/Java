@@ -48,10 +48,12 @@ class Drawer
         StackPane root = new StackPane();
         root.setMaxSize( 300, 300 );
 
-        Calculator calculator = new Calculator(pane);
+        Scene scene = new Scene(pane, 400, 400);
+
+        Canvas canvas = new Canvas(400, 400);
+        Calculator calculator = new Calculator(pane, canvas);
 
         pane.getChildren().add(root);
-        Scene scene = new Scene(pane, 400, 400);
         primaryStage.setScene(scene);
 
         var ref = new Object()
@@ -59,7 +61,6 @@ class Drawer
             int first = 0;
         };
 
-        Canvas canvas = new Canvas(400, 400);
         final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
         initDraw(graphicsContext);
 
@@ -117,7 +118,7 @@ class Drawer
 
         gc.setFill(Color.LIGHTGRAY);
         gc.setStroke(Color.BLACK);
-        gc.setLineWidth(5);
+        gc.setLineWidth(2);
 
         gc.fill();
         gc.strokeRect(
