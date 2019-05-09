@@ -8,7 +8,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
@@ -16,6 +15,7 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Calculator
 {
@@ -33,6 +33,7 @@ class Calculator
     private Label labelText2;
     private Label labelVal1;
     private Label labelVal2;
+    private ArrayList<MutablePair<Integer, Integer>> rNodes;
 
     //=========================================================================================================//
     Calculator( Pane pane, Canvas canvas )
@@ -77,14 +78,7 @@ class Calculator
     void setNodes( ArrayList<MutablePair<Integer, Integer>> nodes )
     {
         this.nodes = nodes;
-    }
-
-    //=========================================================================================================//
-    void calc()
-    {
-        t.setEditable(true);
-
-        ArrayList<MutablePair<Integer, Integer>> rNodes = getRectNodes(nodes);
+        rNodes = getRectNodes(nodes);
         //System.out.println(nodes);
         figure = new Polygon();
         figure.getPoints().addAll((double) nodes.get(0).left, (double) nodes.get(0).right);
@@ -95,7 +89,11 @@ class Calculator
         }
         potential = new Double[rNodes.get(2).left + 1][rNodes.get(2).right + 1];
         points = new double[rNodes.get(2).left + 1][rNodes.get(2).right + 1];
+    }
 
+    //=========================================================================================================//
+    void calc()
+    {
         /*for( int i = rNodes.get(0).left; i <= rNodes.get(2).left; i++ )
         {
             for( int j = rNodes.get(0).right; j <= rNodes.get(2).right; j++ )
@@ -116,8 +114,16 @@ class Calculator
                 {
                     for( int i = 0; i <= rNodes.get(2).left; i++ )
                     {
-                        Arrays.fill(points[i], 0);
                         Arrays.fill(potential[i], 0d);
+                    }
+                    for( int i = 0; i < rNodes.get(2).right + 1; i++ )
+                    {
+                        for( int j = 0; j < rNodes.get(2).left + 1; j++ )
+                        {
+                            if( isEdge(j, i) )
+                                continue;
+                            points[j][i] = 0;
+                        }
                     }
 
                     B = Double.parseDouble(text);
@@ -128,7 +134,7 @@ class Calculator
                     }
                     catch( ArithmeticException e )
                     {
-                        labelText2.setText("Too big value");
+                        labelText2.setText(e.getMessage());
                     }
                 }
             }
@@ -138,10 +144,19 @@ class Calculator
     //=========================================================================================================//
     private void calcPotential( int left0, int leftN, int right0, int rightN ) throws ArithmeticException
     {
-        labelText2.setText("Counting");
+        //labelText2.setText("Counting");
         Boolean[][] condition = new Boolean[leftN][rightN];
         for( int i = 0; i < leftN; i++ )
             Arrays.fill(condition[i], false);
+
+        /*for( int i = right0; i <= rightN; i++ )
+        {
+            for( int j = left0; j <= leftN; j++ )
+            {
+                System.out.print( points[j][i] + " " );
+            }
+            System.out.println();
+        }*/
 
         int cnt = 0;
         while( true )
@@ -372,30 +387,71 @@ class Calculator
                 for( int j = nodes.get(i - 1).left; j <= nodes.get(0).left; j++ )
                     points[j][nodes.get(0).right] = r;
             }
-        }*/
+        }
+        t.setEditable(true);
+         */
 
-        var pairs = new Vector<MutablePair<MutablePair, MutablePair>>();
-        for( int i = 1; i < nodes.size(); i++ )
+
+        List<MutablePair<MutablePair<Integer,Integer>, MutablePair<Integer,Integer>>> pairs = new ArrayList<>();
+        int i;
+        for( i = 1; i < nodes.size(); i++ )
         {
             pairs.add(new MutablePair<>(nodes.get(i-1), nodes.get(i)));
         }
+        pairs.add(new MutablePair<>(nodes.get(i-1), nodes.get(0)));
+
 
         Stage stage = new Stage();
         VBox root = new VBox();
         Scene scene = new Scene(new ScrollPane(root), 250, 300);
         stage.setScene(scene);
 
-        for( int i = 0; i < pairs.size(); i++ )
+        AtomicInteger j = new AtomicInteger(0);
+        for( int k = 0; k < pairs.size(); k++ )
         {
-            var pair = pairs.get(i);
+            var pair = pairs.get(k);
             HBox hBox = new HBox();
             TextField tf = new TextField();
-            Label l = new Label("Edge " + i + " ");
+            Label l = new Label("Edge " + (k+1) + " ");
             hBox.getChildren().addAll(l, tf);
             root.getChildren().add(hBox);
             tf.setOnAction(e ->
             {
-                
+                if( !tf.getText().equals("") )
+                {
+                    tf.setVisible(false);
+
+                    if( pair.left.left.equals(pair.right.left) )
+                    {
+                        if( pair.right.right < pair.left.right )
+                        {
+                            for( int m = pair.right.right; m <= pair.left.right; m++ )
+                                points[pair.right.left][m] = Double.parseDouble(tf.getText());
+                        } else
+                        {
+                            for( int m = pair.left.right; m <= pair.right.right; m++ )
+                                points[pair.right.left][m] = Double.parseDouble(tf.getText());
+                        }
+                    } else
+                    {
+                        if( pair.right.left < pair.left.left )
+                        {
+                            for( int m = pair.right.left; m <= pair.left.left; m++ )
+                                points[m][pair.right.right] = Double.parseDouble(tf.getText());
+                        } else
+                        {
+                            for( int m = pair.left.left; m <= pair.right.left; m++ )
+                                points[m][pair.right.right] = Double.parseDouble(tf.getText());
+                        }
+                    }
+
+                    j.incrementAndGet();
+                    if( j.get() == nodes.size() )
+                    {
+                        t.setEditable(true);
+                        stage.close();
+                    }
+                }
             });
         }
         stage.show();

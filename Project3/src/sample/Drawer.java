@@ -222,7 +222,7 @@ class Drawer
             if( firstPoint.getValue() > yNewEnd )
             {
                 context.strokeLine(firstPoint.getKey(), firstPoint.getValue(), firstPoint.getKey(), yNewEnd);
-                nodes.add( new MutablePair<>( firstPoint.getKey(), (int) yNewEnd ) );
+                nodes.set( nodes.size()-1, new MutablePair<>( firstPoint.getKey(), (int) yNewEnd ) );
                 context.strokeLine(xNewEnd, yNewEnd, firstPoint.getKey(), yNewEnd);
             }
             else
@@ -230,7 +230,7 @@ class Drawer
                 context.strokeLine(firstPoint.getKey(), firstPoint.getValue(), xNewEnd, firstPoint.getValue());
                 nodes.set( 0, new MutablePair<>( (int) xNewEnd, firstPoint.getValue()) );
                 context.strokeLine(xNewEnd, yNewEnd, xNewEnd, firstPoint.getValue());
-                nodes.add( new MutablePair<>( (int) xNewEnd, (int) yNewEnd ) );
+                nodes.set( nodes.size()-1, new MutablePair<>( (int) xNewEnd, (int) yNewEnd ) );
             }
         }
     }
