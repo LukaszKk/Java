@@ -102,6 +102,7 @@ class Drawer
                 Main.enter = true;
                 drawEndingLine();
                 calculator.setNodes( nodes );
+                calculator.setEdge();
                 calculator.calc();
             }
         });

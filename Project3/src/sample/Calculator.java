@@ -1,17 +1,21 @@
 package sample;
 
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
+import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
 class Calculator
 {
@@ -21,24 +25,38 @@ class Calculator
     private double B;
     private double[][] points;
     //private int pointsCnt;
-    private double[][] potential;
+    private Double[][] potential;
     private Color[] colors;
     private Canvas canvas;
     private Polygon figure;
+    private Label labelText;
+    private Label labelText2;
+    private Label labelVal1;
+    private Label labelVal2;
 
     //=========================================================================================================//
     Calculator( Pane pane, Canvas canvas )
     {
         this.canvas = canvas;
-        Label label = new Label("B: ");
-        label.setLayoutX(160);
-        label.setLayoutY(13);
+        labelText = new Label("B: ");
+        labelText2 = new Label("");
+        labelVal1 = new Label("");
+        labelVal2 = new Label("");
         t = new TextField();
         t.setMaxSize(50, 20);
+        labelText.setLayoutX(160);
+        labelText.setLayoutY(13);
         t.setLayoutX(175);
         t.setLayoutY(10);
+        t.setEditable(false);
+        labelText2.setLayoutX(235);
+        labelText2.setLayoutY(13);
+        labelVal1.setLayoutX(5);
+        labelVal1.setLayoutY(80);
+        labelVal2.setLayoutX(5);
+        labelVal2.setLayoutY(310);
 
-        pane.getChildren().addAll(label, t);
+        pane.getChildren().addAll(labelText, t, labelText2, labelVal1, labelVal2);
         E = 1E-8;
         //pointsCnt = 0;
         B = 1;
@@ -64,6 +82,8 @@ class Calculator
     //=========================================================================================================//
     void calc()
     {
+        t.setEditable(true);
+
         ArrayList<MutablePair<Integer, Integer>> rNodes = getRectNodes(nodes);
         //System.out.println(nodes);
         figure = new Polygon();
@@ -73,16 +93,8 @@ class Calculator
             MutablePair<Integer, Integer> node = nodes.get(i);
             figure.getPoints().addAll((double) node.left, (double) node.right);
         }
-
-        potential = new double[rNodes.get(2).left + 1][rNodes.get(2).right + 1];
-
+        potential = new Double[rNodes.get(2).left + 1][rNodes.get(2).right + 1];
         points = new double[rNodes.get(2).left + 1][rNodes.get(2).right + 1];
-        for( int i = 0; i <= rNodes.get(2).left; i++ )
-        {
-            Arrays.fill(points[i], 0);
-            Arrays.fill(potential[i], 0);
-        }
-        setEdge();
 
         /*for( int i = rNodes.get(0).left; i <= rNodes.get(2).left; i++ )
         {
@@ -102,29 +114,31 @@ class Calculator
                 String text = t.getText();
                 if( !text.equals("") )
                 {
-                    B = Integer.parseInt(text);
-                    calcPotential(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
-                    createMap(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
+                    for( int i = 0; i <= rNodes.get(2).left; i++ )
+                    {
+                        Arrays.fill(points[i], 0);
+                        Arrays.fill(potential[i], 0d);
+                    }
+
+                    B = Double.parseDouble(text);
+                    try
+                    {
+                        calcPotential(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
+                        createMap(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
+                    }
+                    catch( ArithmeticException e )
+                    {
+                        labelText2.setText("Too big value");
+                    }
                 }
             }
         });
-
-        /*for( int i = rNodes.get(0).right; i <= rNodes.get(2).right; i++ )
-        {
-            for( int j = rNodes.get(0).left; j <= rNodes.get(2).left; j++ )
-            {
-                if( !isEdge(j, i) && !figure.contains(j, i) )
-                    System.out.print("0.0 ");
-                else
-                    System.out.print(points[j][i] + " ");
-            }
-            System.out.println();
-        }*/
     }
 
     //=========================================================================================================//
-    private void calcPotential( int left0, int leftN, int right0, int rightN )
+    private void calcPotential( int left0, int leftN, int right0, int rightN ) throws ArithmeticException
     {
+        labelText2.setText("Counting");
         Boolean[][] condition = new Boolean[leftN][rightN];
         for( int i = 0; i < leftN; i++ )
             Arrays.fill(condition[i], false);
@@ -149,9 +163,11 @@ class Calculator
                         continue;
 
                     potential[j][i] = ((1 - B) * points[j][i]) + (B / 4 * (points[j - 1][i] + points[j + 1][i] + points[j][i - 1] + points[j][i + 1]));
-                    if( /*!condition[j - left0][i - right0] &&*/ (Math.abs(potential[j][i] - points[j][i]) < E) )
+                    if( potential[j][i].isInfinite() || potential[j][i].isNaN() )
+                        throw new ArithmeticException("To big value");
+                    if( /*!condition[j][i] &&*/ (Math.abs(potential[j][i] - points[j][i]) < E) )
                         condition[j][i] = true;
-                    //System.out.printf("%.0f,%.0f %s ", points[j][i], potential[j][i], (condition[j][i] ? "T" : "F"));
+                    //System.out.print(points[j][i] + "," + potential[j][i] + "," + (condition[j][i] ? "T" : "F") + " ");
                 }
                 //System.out.println();
             }
@@ -176,18 +192,17 @@ class Calculator
             if( is )
                 break;
         }
-
-        t.setText(Integer.toString(cnt));
+        labelText2.setText("Count: " + cnt);
     }
 
     //=========================================================================================================//
     private void drawLegend( double min, double max )
     {
         canvas.getGraphicsContext2D().clearRect(0, 310, 20, 330);
-        canvas.getGraphicsContext2D().fillText(Double.toString(min), 0, 310);
+        labelVal2.setText(Double.toString(min));
         canvas.getGraphicsContext2D().setFill(colors[9]);
         canvas.getGraphicsContext2D().clearRect(0, 95, 20, 115);
-        canvas.getGraphicsContext2D().fillText(Double.toString(max), 0, 95);
+        labelVal1.setText(Double.toString(max));
         for( int i = 0, j = 9; i < 10; ++i, --j )
         {
             canvas.getGraphicsContext2D().setFill(colors[j]);
@@ -198,11 +213,11 @@ class Calculator
     //=========================================================================================================//
     private void createMap( int left0, int leftN, int right0, int rightN )
     {
-        double max = potential[left0 + 1][right0 + 1];
-        double min = potential[left0 + 1][right0 + 1];
-        for( int i = right0 + 1; i < rightN; i++ )
+        double max = -Double.MAX_VALUE;
+        double min = Double.MAX_VALUE;
+        for( int i = right0; i < rightN; i++ )
         {
-            for( int j = left0 + 1; j < leftN; j++ )
+            for( int j = left0; j < leftN; j++ )
             {
                 if( !isEdge(j, i) && !figure.contains(j, i) )
                     continue;
@@ -302,77 +317,87 @@ class Calculator
     }
 
     //=========================================================================================================//
-    private void setEdge()
+    void setEdge()
     {
-        int i = 1;
+        /*int i = 1;
         Random rand = new Random();
         for( ; i < nodes.size(); i++ )
         {
-            int r = rand.nextInt(8) + 1;
+            double r = rand.nextDouble();
             if( nodes.get(i).left.equals(nodes.get(i - 1).left) )
             {
                 if( nodes.get(i).right < nodes.get(i - 1).right )
                 {
                     for( int j = nodes.get(i).right; j <= nodes.get(i - 1).right; j++ )
-                    {
                         points[nodes.get(i).left][j] = r;
-                    }
                 } else
                 {
                     for( int j = nodes.get(i - 1).right; j <= nodes.get(i).right; j++ )
-                    {
                         points[nodes.get(i).left][j] = r;
-                    }
                 }
             } else
             {
                 if( nodes.get(i).left < nodes.get(i - 1).left )
                 {
                     for( int j = nodes.get(i).left; j <= nodes.get(i - 1).left; j++ )
-                    {
                         points[j][nodes.get(i).right] = r;
-                    }
                 } else
                 {
                     for( int j = nodes.get(i - 1).left; j <= nodes.get(i).left; j++ )
-                    {
                         points[j][nodes.get(i).right] = r;
-                    }
                 }
             }
         }
 
-        int r = rand.nextInt(8) + 1;
+        double r = rand.nextDouble();
         if( nodes.get(0).left.equals(nodes.get(i - 1).left) )
         {
             if( nodes.get(i - 1).right < nodes.get(0).right )
             {
                 for( int j = nodes.get(i - 1).right; j <= nodes.get(0).right; j++ )
-                {
                     points[nodes.get(0).left][j] = r;
-                }
             } else
             {
                 for( int j = nodes.get(0).right; j <= nodes.get(i - 1).right; j++ )
-                {
                     points[nodes.get(0).left][j] = r;
-                }
             }
         } else
         {
             if( nodes.get(0).left < nodes.get(i - 1).left )
             {
                 for( int j = nodes.get(0).left; j <= nodes.get(i - 1).left; j++ )
-                {
                     points[j][nodes.get(0).right] = r;
-                }
             } else
             {
                 for( int j = nodes.get(i - 1).left; j <= nodes.get(0).left; j++ )
-                {
                     points[j][nodes.get(0).right] = r;
-                }
             }
+        }*/
+
+        var pairs = new Vector<MutablePair<MutablePair, MutablePair>>();
+        for( int i = 1; i < nodes.size(); i++ )
+        {
+            pairs.add(new MutablePair<>(nodes.get(i-1), nodes.get(i)));
         }
+
+        Stage stage = new Stage();
+        VBox root = new VBox();
+        Scene scene = new Scene(new ScrollPane(root), 250, 300);
+        stage.setScene(scene);
+
+        for( int i = 0; i < pairs.size(); i++ )
+        {
+            var pair = pairs.get(i);
+            HBox hBox = new HBox();
+            TextField tf = new TextField();
+            Label l = new Label("Edge " + i + " ");
+            hBox.getChildren().addAll(l, tf);
+            root.getChildren().add(hBox);
+            tf.setOnAction(e ->
+            {
+                
+            });
+        }
+        stage.show();
     }
 }
