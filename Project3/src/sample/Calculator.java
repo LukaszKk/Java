@@ -65,7 +65,7 @@ class Calculator
     void calc()
     {
         ArrayList<MutablePair<Integer, Integer>> rNodes = getRectNodes(nodes);
-        System.out.println(nodes);
+        //System.out.println(nodes);
         figure = new Polygon();
         figure.getPoints().addAll((double) nodes.get(0).left, (double) nodes.get(0).right);
         for( int i = 1; i < nodes.size(); i++ )
@@ -125,35 +125,33 @@ class Calculator
     //=========================================================================================================//
     private void calcPotential( int left0, int leftN, int right0, int rightN )
     {
-        Boolean[][] condition = new Boolean[leftN - left0 - 1][rightN - right0 - 1];
-        for( int i = 0; i < leftN - left0 - 1; i++ )
-            Arrays.fill( condition[i], false );
+        Boolean[][] condition = new Boolean[leftN][rightN];
+        for( int i = 0; i < leftN; i++ )
+            Arrays.fill(condition[i], false);
 
         int cnt = 0;
         while( true )
         {
-            for( int i = right0 + 1; i < rightN; i++ )
+            for( int i = right0; i < rightN; i++ )
             {
-                for( int j = left0 + 1; j < leftN; j++ )
+                for( int j = left0; j < leftN; j++ )
                 {
                     if( !isEdge(j, i) && !figure.contains(j, i) )
                         continue;
-
                     points[j][i] = potential[j][i];
                 }
             }
-
-            for( int i = right0 + 1; i < rightN; i++ )
+            for( int i = right0; i < rightN; i++ )
             {
-                for( int j = left0 + 1; j < leftN; j++ )
+                for( int j = left0; j < leftN; j++ )
                 {
                     if( !isEdge(j, i) && !figure.contains(j, i) )
                         continue;
 
-                    potential[j][i] = ((1 - B) * points[j][i]) + (B * (points[j + 1][i] + points[j - 1][i] + points[j][i + 1] + points[j][i - 1]));
-                    if( /*!condition[j - left0 - 1][i - right0 - 1] &&*/ (Math.abs(potential[j][i] - points[j][i]) < E) )
-                        condition[j - left0 - 1][i - right0 - 1] = true;
-                    //System.out.print( points[j][i] + "," + potential[j][i] + "," + (condition[j - left0 - 1][i - right0 - 1] ? "t" : "F") + " "  );
+                    potential[j][i] = ((1 - B) * points[j][i]) + (B / 4 * (points[j - 1][i] + points[j + 1][i] + points[j][i - 1] + points[j][i + 1]));
+                    if( /*!condition[j - left0][i - right0] &&*/ (Math.abs(potential[j][i] - points[j][i]) < E) )
+                        condition[j][i] = true;
+                    //System.out.printf("%.0f,%.0f %s ", points[j][i], potential[j][i], (condition[j][i] ? "T" : "F"));
                 }
                 //System.out.println();
             }
@@ -161,35 +159,22 @@ class Calculator
 
             cnt++;
             boolean is = true;
-            for( int i = 0; i < rightN - right0 - 1; i++ )
+            for( int i = right0; i < rightN; i++ )
             {
-                for( int j = 0; j < leftN - left0 - 1; j++ )
+                for( int j = left0; j < leftN; j++ )
                 {
-                    if( !condition[j][i] )
-                    {
-                        is = false;
-                        for( int k = 0; k < leftN - left0 - 1; k++ )
-                            Arrays.fill( condition[k], false );
-                        break;
-                    }
+                    if( condition[j][i] || (!isEdge(j, i) && !figure.contains(j, i)) )
+                        continue;
+                    is = false;
+                    for( int k = left0; k < leftN; k++ )
+                        Arrays.fill( condition[k], false );
+                    break;
                 }
                 if( !is )
                     break;
             }
-
             if( is )
                 break;
-
-            //System.out.println( cnt );
-            /*
-            for( int i = 0; i < leftN-left0-1; i++ )
-            {
-                for( int j = 0; j < rightN - right0 - 1; j++ )
-                    System.out.print(condition[i][j] + ",");
-                System.out.println();
-            }
-            System.out.println();
-            */
         }
 
         t.setText(Integer.toString(cnt));
@@ -299,18 +284,16 @@ class Calculator
             {
                 if( (nodes.get(i - 1).right < y && y < nodes.get(i).right) || (nodes.get(i).right < y && y < nodes.get(i - 1).right) )
                     return true;
-            }
-            else if( nodes.get(i).right.equals(nodes.get(i - 1).right) && nodes.get(i).right.equals(y) )
+            } else if( nodes.get(i).right.equals(nodes.get(i - 1).right) && nodes.get(i).right.equals(y) )
             {
                 if( (nodes.get(i - 1).left < x && x < nodes.get(i).left) || (nodes.get(i).left < x && x < nodes.get(i - 1).left) )
                     return true;
             }
         }
-        if( (nodes.get(i - 1).left.equals(nodes.get(0).left)) && nodes.get(i-1).left.equals(x) )
+        if( (nodes.get(i - 1).left.equals(nodes.get(0).left)) && nodes.get(i - 1).left.equals(x) )
         {
             return (nodes.get(i - 1).right < y && y < nodes.get(0).right) || (nodes.get(0).right < y && y < nodes.get(i - 1).right);
-        }
-        else if( nodes.get(0).right.equals(nodes.get(i - 1).right) && nodes.get(0).right.equals(y) )
+        } else if( nodes.get(0).right.equals(nodes.get(i - 1).right) && nodes.get(0).right.equals(y) )
         {
             return (nodes.get(i - 1).left < x && x < nodes.get(0).left) || (nodes.get(0).left < x && x < nodes.get(i - 1).left);
         }
