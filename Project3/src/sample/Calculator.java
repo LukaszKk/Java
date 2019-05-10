@@ -21,10 +21,10 @@ class Calculator
 {
     private TextField t;
     private ArrayList<MutablePair<Integer, Integer>> nodes;
-    private final double E;
+    private final double E = 0.001;
     private double B;
     private double[][] points;
-    //private int pointsCnt;
+    private int pointsCnt;
     private Double[][] potential;
     private Color[] colors;
     private Canvas canvas;
@@ -58,8 +58,7 @@ class Calculator
         labelVal2.setLayoutY(310);
 
         pane.getChildren().addAll(labelText, t, labelText2, labelVal1, labelVal2);
-        E = 1E-8;
-        //pointsCnt = 0;
+        pointsCnt = 0;
         B = 1;
 
         colors = new Color[]{ new Color(244 / 255d, 66 / 255d, 66 / 255d, 1),
@@ -94,16 +93,16 @@ class Calculator
     //=========================================================================================================//
     void calc()
     {
-        /*for( int i = rNodes.get(0).left; i <= rNodes.get(2).left; i++ )
+        for( int i = rNodes.get(0).right; i < rNodes.get(2).right; i++ )
         {
-            for( int j = rNodes.get(0).right; j <= rNodes.get(2).right; j++ )
+            for( int j = rNodes.get(0).left; j < rNodes.get(2).left; j++ )
             {
-                if( !isEdge(j, i) && !figure.contains(i, j) )
+                if( isEdge(j, i) || !figure.contains(j, i) )
                     continue;
 
                 pointsCnt++;
             }
-        }*/
+        }
 
         t.setOnKeyPressed(keyEvent ->
         {
@@ -112,21 +111,19 @@ class Calculator
                 String text = t.getText();
                 if( !text.equals("") )
                 {
-                    for( int i = 0; i <= rNodes.get(2).left; i++ )
+                    for( int i = 0; i < rNodes.get(2).right; i++ )
                     {
-                        Arrays.fill(potential[i], 0d);
-                    }
-                    for( int i = 0; i < rNodes.get(2).right + 1; i++ )
-                    {
-                        for( int j = 0; j < rNodes.get(2).left + 1; j++ )
+                        for( int j = 0; j < rNodes.get(2).left; j++ )
                         {
                             if( isEdge(j, i) )
                                 continue;
                             points[j][i] = 0;
+                            potential[j][i] = 0d;
                         }
                     }
 
                     B = Double.parseDouble(text);
+
                     try
                     {
                         calcPotential(rNodes.get(0).left, rNodes.get(2).left, rNodes.get(0).right, rNodes.get(2).right);
@@ -145,9 +142,9 @@ class Calculator
     private void calcPotential( int left0, int leftN, int right0, int rightN ) throws ArithmeticException
     {
         //labelText2.setText("Counting");
-        Boolean[][] condition = new Boolean[leftN][rightN];
-        for( int i = 0; i < leftN; i++ )
-            Arrays.fill(condition[i], false);
+        //Boolean[][] condition = new Boolean[leftN][rightN];
+        //for( int i = 0; i < leftN; i++ )
+            //Arrays.fill(condition[i], false);
 
         /*for( int i = right0; i <= rightN; i++ )
         {
@@ -158,38 +155,52 @@ class Calculator
             System.out.println();
         }*/
 
-        int cnt = 0;
+        int cnt;
         while( true )
         {
             for( int i = right0; i < rightN; i++ )
             {
                 for( int j = left0; j < leftN; j++ )
                 {
-                    if( !isEdge(j, i) && !figure.contains(j, i) )
+                    if( isEdge(j, i) || !figure.contains(j, i) )
                         continue;
                     points[j][i] = potential[j][i];
                 }
             }
+
+            cnt = 0;
             for( int i = right0; i < rightN; i++ )
             {
                 for( int j = left0; j < leftN; j++ )
                 {
-                    if( !isEdge(j, i) && !figure.contains(j, i) )
+                    if( isEdge(j, i) || !figure.contains(j, i) )
                         continue;
 
-                    potential[j][i] = ((1 - B) * points[j][i]) + (B / 4 * (points[j - 1][i] + points[j + 1][i] + points[j][i - 1] + points[j][i + 1]));
-                    if( potential[j][i].isInfinite() || potential[j][i].isNaN() )
-                        throw new ArithmeticException("To big value");
-                    if( /*!condition[j][i] &&*/ (Math.abs(potential[j][i] - points[j][i]) < E) )
-                        condition[j][i] = true;
-                    //System.out.print(points[j][i] + "," + potential[j][i] + "," + (condition[j][i] ? "T" : "F") + " ");
-                }
-                //System.out.println();
-            }
-            //System.out.println();
+                    double wsp1 = 1d - B;
+                    double first = wsp1 * points[j][i];
+                    double inner = points[j - 1][i] + points[j + 1][i] + points[j][i - 1] + points[j][i + 1];
+                    double wsp2 = B / 4d;
+                    double second = wsp2 * inner;
+                    potential[j][i] = first + second;
 
-            cnt++;
-            boolean is = true;
+                    if( potential[j][i].isInfinite() || potential[j][i].isNaN() )
+                        throw new ArithmeticException("Too big value");
+
+                    double abs = potential[j][i] - points[j][i];
+                    abs = Math.abs(abs);
+                    if( abs <= 0.001 )
+                        cnt++;
+
+                        //condition[j][i] = true;
+                    System.out.print(points[j][i] + "," + potential[j][i] + " ");
+                }
+                System.out.println();
+            }
+            System.out.println();
+            if( cnt == pointsCnt )
+                break;
+
+            /*boolean is = true;
             for( int i = right0; i < rightN; i++ )
             {
                 for( int j = left0; j < leftN; j++ )
@@ -205,7 +216,7 @@ class Calculator
                     break;
             }
             if( is )
-                break;
+                break;*/
         }
         labelText2.setText("Count: " + cnt);
     }
@@ -234,7 +245,7 @@ class Calculator
         {
             for( int j = left0; j < leftN; j++ )
             {
-                if( !isEdge(j, i) && !figure.contains(j, i) )
+                if( isEdge(j, i) || !figure.contains(j, i) )
                     continue;
 
                 max = Math.max(potential[j][i], max);
@@ -248,7 +259,7 @@ class Calculator
         {
             for( int j = left0 + 1; j < leftN; j++ )
             {
-                if( !isEdge(j, i) && !figure.contains(j, i) )
+                if( isEdge(j, i) || !figure.contains(j, i) )
                     continue;
 
                 Color c = colors[getColor(potential[j][i], min, max)];
